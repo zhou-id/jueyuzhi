@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><title>sim-all</title>
+<style>body{background:#111;color:#ddd;font:12px monospace;padding:16px;white-space:pre-wrap}iframe{width:1px;height:1px;opacity:0;border:0}.bad{color:#e08a7a}.ok{color:#8fbf8f}</style>
+</head>
+<body>
+<pre id="out">running...</pre>
+<iframe id="frame" src="../index.html"></iframe>
+<script>
+const out = document.getElementById('out');
+const wait = ms => new Promise(r => setTimeout(r, ms));
+(async () => {
+  const frame = document.getElementById('frame');
+  let w = null;
+  for (let i = 0; i < 40; i++) {
+    await wait(100);
+    w = frame.contentWindow;
+    try { if (w.eval('typeof App !== "undefined" && typeof Engine !== "undefined"')) break; } catch (e) {}
+  }
+  const LOCATIONS = w.eval('LOCATIONS');
+  const Engine = w.eval('Engine');
+  const snapshot = JSON.stringify(Engine.meta);
+  const fails = [];
+  const stats = { finished: 0, arrived: 0, died: 0, loop: 0 };
+  const perLevel = {};
+
+  for (const loc of LOCATIONS) {
+    try {
+      const cart = { water: 10, food: 10 };
+      (loc.must || []).forEach(id => { cart[id] = 1; });
+      Engine.meta = { eggs: [], ach: [], records: [], deaths: 0, runs: 0 };
+      Engine.start(loc.id, cart);
+      let guard = 0;
+      while (!Engine.run.finished && guard++ < 80) {
+        const r = Engine.act('march');
+        if (r.type === 'event' && r.event) {
+          const opts = r.event.options || [];
+          let idx = -1;
+          for (let i = 0; i < opts.length; i++) { if (Engine.reqMet(opts[i].req)) { idx = i; break; } }
+          if (idx < 0) throw new Error('无可选选项: ' + r.event.id);
+          Engine.choose(idx);
+          Engine.continueAfterOutcome();
+        }
+      }
+      if (!Engine.run.finished) { stats.loop++; fails.push(loc.id + ' 未结束(80步)'); }
+      else {
+        stats.finished++;
+        const ok = !!Engine.run.success;
+        ok ? stats.arrived++ : stats.died++;
+        perLevel[loc.level] = perLevel[loc.level] || { n: 0, ok: 0 };
+        perLevel[loc.level].n++;
+        if (ok) perLevel[loc.level].ok++;
+      }
+    } catch (e) {
+      fails.push(loc.id + ' ERR ' + e.message);
+    }
+  }
+  Engine.meta = JSON.parse(snapshot);
+  const lines = [];
+  lines.push('LOCATIONS=' + LOCATIONS.length + ' FINISHED=' + stats.finished + ' ARRIVED=' + stats.arrived + ' DIED=' + stats.died + ' LOOP=' + stats.loop);
+  lines.push('LEVELS=' + JSON.stringify(perLevel));
+  lines.push('FAILS=' + fails.length + (fails.length ? ' :: ' + fails.join(' | ') : ''));
+  lines.push('RESULT=' + (fails.length === 0 ? 'ALL PASS' : 'HAS FAIL'));
+  out.innerHTML = fails.length ? '<span class="bad">' + lines.join('\n') + '</span>' : '<span class="ok">' + lines.join('\n') + '</span>';
+  document.title = 'sim done';
+})();
+</script>
+</body></html>

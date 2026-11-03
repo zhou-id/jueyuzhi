@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>绝域志 · TERRA INCOGNITA</title>
+<meta name="description" content="中国无人区生存档案：108 处绝域坐标，五级难度，从郊野荒径到死亡谷。">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-mood="horror">
+<div class="grain"></div>
+<div class="vignette"></div>
+<div class="scanlines" aria-hidden="true"></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-mountain" viewBox="0 0 24 24"><path d="M2 20L9 6l4.6 8.4L16.4 10 22 20H2z"/></symbol>
+  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M15.5 8.5l-2 5-5 2 2-5z"/></symbol>
+  <symbol id="i-boot" viewBox="0 0 24 24"><path d="M5 3h6l1 9 7 3v4H4v-6l1-4z"/><path d="M5 15h12"/></symbol>
+  <symbol id="i-tent" viewBox="0 0 24 24"><path d="M12 3L3 21h18L12 3z"/><path d="M12 10v11"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 2s6 7 6 12a6 6 0 1 1-12 0c0-5 6-12 6-12z"/></symbol>
+  <symbol id="i-food" viewBox="0 0 24 24"><path d="M4 3v7a3 3 0 0 0 6 0V3M7 10v11M17 3c-1 0-2 2-2 5s1 4 2 4 2-1 2-4-1-5-2-5zM17 12v9"/></symbol>
+  <symbol id="i-fire" viewBox="0 0 24 24"><path d="M12 2c1 4-4 5-4 10a4 4 0 1 0 8 0c0-2-1-3-2-4 0 2-1 2-1.5 1.5C13 7 13 4 12 2z"/></symbol>
+  <symbol id="i-backpack" viewBox="0 0 24 24"><path d="M6 8a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v12H6V8z"/><path d="M9 4V2h6v2M9 12h6M9 12v5h6v-5"/></symbol>
+  <symbol id="i-egg" viewBox="0 0 24 24"><path d="M12 2c4 0 7 7 7 12a7 7 0 1 1-14 0c0-5 3-12 7-12z"/><path d="M9 14c0 2 1 3 3 3" class="thin"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16M14 6l6 6-6 6"/></symbol>
+  <symbol id="i-cross" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></symbol>
+  <symbol id="i-skull" viewBox="0 0 24 24"><path d="M12 2a8 8 0 0 1 8 8c0 3-1 4-3 5v4H7v-4c-2-1-3-2-3-5a8 8 0 0 1 8-8z"/><circle cx="9" cy="10" r="1.4"/><circle cx="15" cy="10" r="1.4"/><path d="M9 21h6M12 15v3"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></symbol>
+</svg>
+
+<header class="topbar">
+  <button class="brand" data-nav="title">
+    <span class="brand-mark"><svg viewBox="0 0 24 24"><use href="#i-mountain"/></svg></span>
+    <span class="brand-text">绝域志<em>TERRA INCOGNITA</em></span>
+  </button>
+  <nav class="topnav">
+    <button data-nav="map" class="nav-item">绝域地图</button>
+    <button data-nav="routes" class="nav-item">路线编目</button>
+    <button data-nav="gear" class="nav-item">装备库</button>
+    <button data-nav="lore" class="nav-item">异闻录</button>
+    <button data-nav="archive" class="nav-item">行者档案</button>
+    <button data-nav="notice" class="nav-item">公告须知</button>
+    <button data-nav="about" class="nav-item">关于</button>
+  </nav>
+  <div class="topstat">
+    <span><i>行者</i><b id="stat-user">—</b></span>
+    <span><i>生还</i><b id="stat-runs">0</b></span>
+    <span><i>档案</i><b id="stat-eggs">0</b></span>
+    <span><i>最高</i><b id="stat-rank">—</b></span>
+  </div>
+</header>
+
+<main id="app">
+
+  <!-- ================= 登录页 ================= -->
+  <section class="screen screen-login active" id="screen-login">
+    <div class="login-bg" aria-hidden="true">
+      <div class="login-sky"></div>
+      <div class="login-moon"></div>
+      <div class="login-fog f1"></div>
+      <div class="login-fog f2"></div>
+      <div class="login-fog f3"></div>
+      <div class="login-ridge lr1"></div>
+      <div class="login-ridge lr2"></div>
+      <div class="login-eyes" title="它们在看着你"><i></i><i></i></div>
+    </div>
+    <div class="login-brand">
+      <span class="lb-mark"><svg viewBox="0 0 24 24"><use href="#i-mountain"/></svg></span>
+      <span>绝域志<em>TERRA INCOGNITA</em></span>
+    </div>
+    <div class="login-inner">
+      <p class="kicker">IDENTITY CHECK · 入册</p>
+      <h1 class="login-title">先留下名字，<br>再走进没有名字的地方。</h1>
+      <p class="login-lead">地图上有一百零八处坐标。有的只是郊外一条无人走的山径，<br>有的地方，进去的人只留下了一本日记。选一个自己。</p>
+
+      <div class="login-form">
+        <div class="lf-block">
+          <label class="lf-label">选择印记 <span>头像</span></label>
+          <div class="avatar-grid" id="avatar-grid"></div>
+        </div>
+        <div class="lf-row">
+          <div class="lf-block">
+            <label class="lf-label" for="login-name">姓名 / 代号</label>
+            <input id="login-name" class="login-input" maxlength="12" placeholder="如：无名氏" autocomplete="off">
+          </div>
+          <div class="lf-block">
+            <label class="lf-label">称号 <span id="title-hint">随档案解锁</span></label>
+            <div class="title-pick" id="title-pick"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="login-actions">
+        <button class="btn btn-primary btn-lg" id="btn-enter">
+          <span>签下生死状 · 进入绝域</span>
+          <svg viewBox="0 0 24 24"><use href="#i-arrow"/></svg>
+        </button>
+        <button class="btn btn-ghost btn-lg" id="btn-guest">以匿名者进入</button>
+      </div>
+      <p class="login-foot">
+        档案只保存在这台设备的浏览器里。<br>
+        <span>本作含死亡、失踪与心理惊悚描写 · 建议 16 岁以上</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= 标题页 ================= -->
+  <section class="screen screen-title" id="screen-title">
+    <div class="title-bg" aria-hidden="true">
+      <div class="title-sky"></div>
+      <div class="title-moon"></div>
+      <div class="title-stars"></div>
+      <div class="title-fog tf1"></div>
+      <div class="title-fog tf2"></div>
+      <div class="title-fog tf3"></div>
+      <div class="title-ridge r1"></div>
+      <div class="title-ridge r2"></div>
+      <div class="title-ridge r3"></div>
+      <div class="title-beam"></div>
+      <div class="title-eyes te1"><i></i><i></i></div>
+      <div class="title-eyes te2"><i></i><i></i></div>
+      <div class="title-walker">
+        <svg viewBox="0 0 40 80" aria-hidden="true">
+          <path class="tw-body" d="M18 12a4 4 0 1 0 0 .1zM16 20h6l3 16-4 2-1 10h-3l-1-10-4-2z"/>
+          <path class="tw-stick" d="M24 22l8 26"/>
+          <circle class="tw-lamp" cx="32" cy="49" r="2.6"/>
+        </svg>
+      </div>
+    </div>
+    <div class="title-inner">
+      <p class="kicker">中国无人区 · 生存档案</p>
+      <h1 class="mega-title" data-text="绝域志"><span>绝域</span><span>志</span></h1>
+      <p class="title-en">TERRA INCOGNITA / SURVIVAL DOSSIER</p>
+      <p class="title-lead">
+        一百零八处没有补给、没有信号、也没有退路的地方。<br>
+        预算有限，背囊有重量，天气不讲道理。<br>
+        你要做的，只是活着走出来。
+      </p>
+      <div class="title-actions">
+        <button class="btn btn-primary btn-lg" data-nav="map">
+          <span>进入绝域</span>
+          <svg viewBox="0 0 24 24" class="btn-arrow"><use href="#i-arrow"/></svg>
+        </button>
+        <button class="btn btn-ghost btn-lg" data-nav="routes">翻阅路线编目</button>
+        <button class="btn btn-ghost btn-lg" data-nav="notice">先看告示</button>
+      </div>
+      <div class="title-meta">
+        <span>真人真事改编 · 虚构演绎</span><span class="dot"></span>
+        <span>108 处坐标</span><span class="dot"></span>
+        <span>8 种地貌</span><span class="dot"></span>
+        <span>26 处隐藏档案</span><span class="dot"></span>
+        <span>五级难度</span>
+      </div>
+    </div>
+    <div class="title-foot">在真实的无人区，任何一次侥幸都不该被模仿。 <i class="title-author">by xuranzhou</i></div>
+  </section>
+
+  <!-- ================= 地图页 ================= -->
+  <section class="screen screen-map" id="screen-map">
+    <div class="map-head">
+      <div>
+        <p class="kicker">SELECT YOUR COORDINATE</p>
+        <h2 class="sec-title">选一个坐标，就是选一种死法</h2>
+      </div>
+      <div class="map-filters" id="map-filters">
+        <button class="chip active" data-filter="all">全部</button>
+        <button class="chip" data-filter="1">★</button>
+        <button class="chip" data-filter="2">★★</button>
+        <button class="chip" data-filter="3">★★★</button>
+        <button class="chip" data-filter="4">★★★★</button>
+        <button class="chip" data-filter="5">★★★★★</button>
+      </div>
+    </div>
+
+    <div class="map-stage">
+      <div class="map-frame">
+        <div class="map-toolbar">
+          <span class="map-tool-label"><i class="pulse-dot"></i>中国 · 绝域分布</span>
+          <span class="map-tool-hint">共 <b id="map-count">0</b> 处坐标 · 点击光点</span>
+        </div>
+        <div id="map-svg-wrap" class="map-svg-wrap"></div>
+        <div class="map-compass" aria-hidden="true">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="33"/>
+            <circle cx="50" cy="50" r="25" class="dash"/>
+            <path d="M50 13L55 46L50 50L45 46Z" class="needleN"/>
+            <path d="M50 87L45 54L50 50L55 54Z" class="needleS"/>
+            <text x="50" y="9">N</text>
+          </svg>
+        </div>
+        <div class="map-scale"><span></span>500 KM</div>
+      </div>
+
+      <aside class="route-card" id="route-card">
+        <div class="route-empty" id="route-empty">
+          <div class="empty-mark"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="17"/><path d="M24 13v22M13 24h22"/></svg></div>
+          <p>把光标移到地图上的光点，<br>或者直接点击它们。</p>
+          <span>一百零八处坐标，分别标好了预算、天数与星级。</span>
+        </div>
+        <div class="route-detail" id="route-detail" hidden></div>
+      </aside>
+    </div>
+    <div class="map-legend">
+      <span><i class="lg-dot lv1"></i>★ 轻装</span>
+      <span><i class="lg-dot lv2"></i>★★ 野径</span>
+      <span><i class="lg-dot lv3"></i>★★★ 挑战</span>
+      <span><i class="lg-dot lv4"></i>★★★★ 危险</span>
+      <span><i class="lg-dot lv5"></i>★★★★★ 绝境</span>
+      <span><i class="lg-secret"></i>尚未解锁的秘密路线</span>
+    </div>
+  </section>
+
+  <!-- ================= 路线编目 ================= -->
+  <section class="screen screen-routes" id="screen-routes">
+    <div class="archive-head">
+      <p class="kicker">THE CATALOGUE</p>
+      <h2 class="sec-title">路线编目</h2>
+      <p class="archive-sub">一百零八处坐标，按星级与省份归档。点进去看简报。</p>
+    </div>
+    <div class="routes-bar">
+      <div class="map-filters" id="routes-filters">
+        <button class="chip active" data-level="all">全部</button>
+        <button class="chip" data-level="1">★</button>
+        <button class="chip" data-level="2">★★</button>
+        <button class="chip" data-level="3">★★★</button>
+        <button class="chip" data-level="4">★★★★</button>
+        <button class="chip" data-level="5">★★★★★</button>
+      </div>
+      <div class="routes-search"><input id="routes-search" placeholder="搜索地名 / 省份"></div>
+    </div>
+    <div class="routes-grid" id="routes-grid"></div>
+  </section>
+
+  <!-- ================= 装备库 ================= -->
+  <section class="screen screen-gear" id="screen-gear">
+    <div class="archive-head">
+      <p class="kicker">THE ARMORY</p>
+      <h2 class="sec-title">装备库</h2>
+      <p class="archive-sub">每一件都标了价格与重量。山不关心你花了多少钱，只关心你背了多少。</p>
+    </div>
+    <div class="archive-tabs" id="gear-tabs"></div>
+    <div class="gear-codex" id="gear-codex"></div>
+  </section>
+
+  <!-- ================= 异闻录 ================= -->
+  <section class="screen screen-lore" id="screen-lore">
+    <div class="archive-head">
+      <p class="kicker">THE LEGENDS</p>
+      <h2 class="sec-title">异闻录</h2>
+      <p class="archive-sub">有些事没有被写进任何一份科考报告。它们只在火堆边被讲过。</p>
+    </div>
+    <div class="archive-tabs" id="lore-tabs">
+      <button class="chip active" data-lore="eggs">隐藏档案</button>
+      <button class="chip" data-lore="legends">地方传闻</button>
+    </div>
+    <div class="archive-body" id="lore-body"></div>
+  </section>
+
+  <!-- ================= 简报页 ================= -->
+  <section class="screen screen-brief" id="screen-brief">
+    <div class="brief-wrap">
+      <div class="brief-visual">
+        <div class="brief-scene" id="brief-scene"></div>
+        <div class="brief-stamp" id="brief-stamp"></div>
+        <div class="brief-visual-foot">
+          <span id="brief-coord"></span>
+          <span id="brief-season"></span>
+        </div>
+      </div>
+      <div class="brief-body">
+        <div class="brief-scroll">
+        <button class="back-link" data-nav="map">← 返回地图</button>
+        <p class="kicker" id="brief-province"></p>
+        <h2 class="brief-name" id="brief-name"></h2>
+        <p class="brief-en" id="brief-en"></p>
+        <div class="brief-brief-row">
+          <p class="brief-text" id="brief-text"></p>
+          <div class="brief-numbers" id="brief-numbers"></div>
+        </div>
+        <div class="brief-section">
+          <h3>路线节点</h3>
+          <div class="route-line" id="brief-route"></div>
+        </div>
+        <div class="brief-section">
+          <h3>致命因素</h3>
+          <div class="hazard-list" id="brief-hazards"></div>
+        </div>
+        <div class="brief-section">
+          <h3>老驴的情报</h3>
+          <ul class="intel-list" id="brief-intel"></ul>
+        </div>
+        </div>
+        <div class="brief-actions">
+          <button class="btn btn-primary" id="btn-goto-market">
+            <span>去采购物资</span>
+            <svg viewBox="0 0 24 24"><use href="#i-arrow"/></svg>
+          </button>
+          <button class="btn btn-ghost" data-nav="map">换一条路</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 采购页 ================= -->
+  <section class="screen screen-market" id="screen-market">
+    <div class="market-top">
+      <div class="market-title">
+        <button class="back-link" data-nav="brief">← 返回简报</button>
+        <p class="kicker">SUPPLY DEPOT</p>
+        <h2 class="sec-title" id="market-name">补给站</h2>
+        <p class="market-sub" id="market-sub"></p>
+      </div>
+      <div class="market-gauges">
+        <div class="gauge">
+          <div class="gauge-head"><span>预算</span><b id="g-budget">¥0</b></div>
+          <div class="gauge-bar"><i id="g-budget-bar"></i></div>
+          <div class="gauge-foot"><span id="g-budget-used">已花 ¥0</span><span id="g-budget-total"></span></div>
+        </div>
+        <div class="gauge">
+          <div class="gauge-head"><span>背负重量</span><b id="g-weight">0.0 kg</b></div>
+          <div class="gauge-bar weight"><i id="g-weight-bar"></i></div>
+          <div class="gauge-foot"><span id="g-weight-cap"></span><span>超过承重无法出发</span></div>
+        </div>
+        <div class="gauge">
+          <div class="gauge-head"><span>预计消耗</span><b id="g-food">0</b></div>
+          <div class="gauge-foot"><span>口粮 / 饮水 / 燃料</span><span id="g-extra"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="market-tabs" id="market-tabs"></div>
+    <div class="gear-grid" id="gear-grid"></div>
+
+    <div class="market-dock">
+      <div class="dock-left">
+        <span class="dock-label">背囊清单</span>
+        <div class="dock-items" id="dock-items">空背囊</div>
+      </div>
+      <div class="dock-right">
+        <button class="btn btn-ghost" id="btn-clear">清空</button>
+        <button class="btn btn-primary btn-lg" id="btn-depart">
+          <span>签下免责协议，出发</span>
+          <svg viewBox="0 0 24 24"><use href="#i-arrow"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 远征页 ================= -->
+  <section class="screen screen-run" id="screen-run">
+    <div class="run-top">
+      <div class="run-loc">
+        <p class="kicker" id="run-province"></p>
+        <h2 id="run-name"></h2>
+      </div>
+      <div class="run-progress">
+        <div class="run-progress-head">
+          <span id="run-stage-label">—</span>
+          <b id="run-day">DAY 01</b>
+        </div>
+        <div class="progress-track"><i id="run-progress-bar"></i><em id="run-progress-dot"></em></div>
+        <div class="progress-nodes" id="progress-nodes"></div>
+      </div>
+      <div class="run-weather" id="run-weather">
+        <span class="weather-icon" id="weather-icon"></span>
+        <div><b id="weather-name">—</b><span id="weather-temp">—</span></div>
+      </div>
+    </div>
+
+    <div class="run-main">
+      <div class="run-scene">
+        <div class="scene-frame" id="scene-frame"></div>
+        <div class="scene-overlay" id="scene-overlay"></div>
+        <div class="scene-caption" id="scene-caption"></div>
+        <div class="run-log-toggle">
+          <button id="btn-log" class="log-toggle">行动日志 <span id="log-count">0</span></button>
+        </div>
+      </div>
+
+      <aside class="run-side">
+        <div class="panel status-panel">
+          <h3>身体状态</h3>
+          <div class="meter" data-key="hp">
+            <div class="meter-head"><span><svg viewBox="0 0 24 24"><use href="#i-cross"/></svg>生命</span><b id="m-hp">100</b></div>
+            <div class="meter-bar hp"><i id="bar-hp"></i></div>
+          </div>
+          <div class="meter" data-key="stamina">
+            <div class="meter-head"><span><svg viewBox="0 0 24 24"><use href="#i-boot"/></svg>体力</span><b id="m-stamina">100</b></div>
+            <div class="meter-bar stamina"><i id="bar-stamina"></i></div>
+          </div>
+          <div class="meter" data-key="warmth">
+            <div class="meter-head"><span><svg viewBox="0 0 24 24"><use href="#i-fire"/></svg>核心体温</span><b id="m-warmth">100</b></div>
+            <div class="meter-bar warmth"><i id="bar-warmth"></i></div>
+          </div>
+          <div class="meter" data-key="morale">
+            <div class="meter-head"><span><svg viewBox="0 0 24 24"><use href="#i-compass"/></svg>意志</span><b id="m-morale">100</b></div>
+            <div class="meter-bar morale"><i id="bar-morale"></i></div>
+          </div>
+        </div>
+
+        <div class="panel supply-panel">
+          <h3>剩余物资</h3>
+          <div class="supply-grid">
+            <div class="supply"><svg viewBox="0 0 24 24"><use href="#i-food"/></svg><i>口粮</i><b id="s-food">0</b><em>份</em></div>
+            <div class="supply"><svg viewBox="0 0 24 24"><use href="#i-drop"/></svg><i>饮水</i><b id="s-water">0</b><em>L</em></div>
+            <div class="supply"><svg viewBox="0 0 24 24"><use href="#i-fire"/></svg><i>燃料</i><b id="s-fuel">0</b><em>罐</em></div>
+            <div class="supply"><svg viewBox="0 0 24 24"><use href="#i-backpack"/></svg><i>负重</i><b id="s-load">0</b><em>kg</em></div>
+          </div>
+          <div class="injury-line" id="injury-line" hidden></div>
+        </div>
+
+        <div class="panel gear-panel">
+          <h3>随身装备 <span id="gear-count"></span></h3>
+          <div class="gear-chips" id="gear-chips"></div>
+        </div>
+
+        <div class="panel log-panel" id="log-panel">
+          <h3>行动日志 <button class="panel-close" id="btn-log-close">×</button></h3>
+          <div class="log-list" id="log-list"></div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="action-dock">
+      <div class="action-tip">
+        <span class="kicker">接下来做什么</span>
+        <p id="action-hint">判断天气与体力，再决定。</p>
+      </div>
+      <div class="actions" id="actions">
+        <button class="action-card" data-action="march">
+          <svg viewBox="0 0 24 24"><use href="#i-boot"/></svg>
+          <b>继续行军</b><span>推进路线 · 消耗最大</span><em>+1 节点</em>
+        </button>
+        <button class="action-card" data-action="scout">
+          <svg viewBox="0 0 24 24"><use href="#i-search"/></svg>
+          <b>侦察周边</b><span>寻找线索与支线</span><em>风险中等</em>
+        </button>
+        <button class="action-card" data-action="camp">
+          <svg viewBox="0 0 24 24"><use href="#i-tent"/></svg>
+          <b>就地扎营</b><span>恢复体力与体温</span><em>耗 1 天</em>
+        </button>
+        <button class="action-card" data-action="scavenge">
+          <svg viewBox="0 0 24 24"><use href="#i-backpack"/></svg>
+          <b>翻找遗迹</b><span>可能有前人的补给</span><em>高风险</em>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 结算页 ================= -->
+  <section class="screen screen-result" id="screen-result">
+    <div class="result-wrap">
+      <div class="result-visual">
+        <div class="result-scene" id="result-scene"></div>
+        <div class="result-stamp" id="result-stamp">生还</div>
+      </div>
+      <div class="result-body">
+        <p class="kicker" id="result-kicker">EXPEDITION REPORT</p>
+        <h2 id="result-title">你走出来了</h2>
+        <p class="result-sub" id="result-sub"></p>
+        <div class="result-rank">
+          <span>综合评级</span><b id="result-rank">A</b><i id="result-score">0 pts</i>
+        </div>
+        <div class="result-stats" id="result-stats"></div>
+        <div class="result-section">
+          <h3>路线回放</h3>
+          <div class="result-timeline" id="result-timeline"></div>
+        </div>
+        <div class="result-section" id="result-eggs-wrap">
+          <h3>本次发现</h3>
+          <div class="result-eggs" id="result-eggs"></div>
+        </div>
+        <div class="result-section" id="result-ach-wrap">
+          <h3>解锁成就</h3>
+          <div class="result-ach" id="result-ach"></div>
+        </div>
+        <p class="result-note" id="result-note"></p>
+        <div class="result-actions">
+          <button class="btn btn-primary" data-nav="map">再进一次山</button>
+          <button class="btn btn-ghost" data-nav="archive">查看档案</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 行者档案 ================= -->
+  <section class="screen screen-archive" id="screen-archive">
+    <div class="archive-head">
+      <p class="kicker">THE ARCHIVE</p>
+      <h2 class="sec-title">行者档案</h2>
+      <p class="archive-sub">你活着带回来的，才算证据。</p>
+    </div>
+    <div class="archive-tabs" id="archive-tabs">
+      <button class="chip active" data-tab="eggs">隐藏档案</button>
+      <button class="chip" data-tab="ach">成就</button>
+      <button class="chip" data-tab="records">远征记录</button>
+    </div>
+    <div class="archive-body" id="archive-body"></div>
+  </section>
+
+  <!-- ================= 公告须知 ================= -->
+  <section class="screen screen-notice" id="screen-notice">
+    <div class="archive-head">
+      <p class="kicker">NOTICE & DISCLAIMER</p>
+      <h2 class="sec-title">公告须知</h2>
+      <p class="archive-sub">在你走进任何一条线之前，请把这一页读完。</p>
+    </div>
+    <div class="notice-wrap">
+      <article class="notice-card">
+        <span class="notice-no">NOTICE 01</span>
+        <h3>运营公告</h3>
+        <p>《绝域志》为个人创作的虚构生存模拟，永久免费、无内购、无广告、不收集任何账号信息。所有进度只写入本机浏览器的 localStorage。</p>
+        <p>当前版本收录 108 处坐标、8 种地貌、5 级难度与 26 份隐藏档案。低星级路线节奏舒缓，五星路线包含较强惊悚与死亡描写，请按自己的承受度选择。</p>
+        <p class="notice-update">版本 0.9 · 2026-11 · 编目扩充完成</p>
+      </article>
+      <article class="notice-card warn">
+        <span class="notice-no">NOTICE 02</span>
+        <h3>免责声明</h3>
+        <p>本作是游戏，不是攻略。地形、天气、事件与人物均经过改编与虚构，不可作为任何真实出行的参考、计划或依据。</p>
+        <p>现实中，羌塘、罗布泊、可可西里、鳌太、昆仑死亡谷、墨脱等地属于受管控或极度危险区域。进入需依法审批、专业向导、卫星通讯与完整救援预案；擅自进入可能违法，且可能致命。</p>
+        <p>请勿模仿游戏中的任何选择。你不会读档，现实里也没有第二次机会。</p>
+      </article>
+      <article class="notice-card">
+        <span class="notice-no">NOTICE 03</span>
+        <h3>内容分级</h3>
+        <p>建议 16 岁以上。包含死亡、失踪、失温、脱水、野生动物袭击、心理惊悚与超自然暗示；不含血腥图片、不含赌博机制、不含付费抽卡。</p>
+      </article>
+      <article class="notice-card">
+        <span class="notice-no">NOTICE 04</span>
+        <h3>版权说明</h3>
+        <p>© 2026 绝域志 / TERRA INCOGNITA · by xuranzhou。代码、文案、插画与界面设计版权归作者所有。允许个人游玩与截图分享，禁止商用、二次销售、批量搬运与去除署名。</p>
+        <p>中国地图轮廓数据来自公开地理数据（DataV GeoJSON），仅用于示意；所有点位坐标经过艺术化处理，不代表真实入口位置。文中提及的真实地名、事件与人物仅作背景引用，版权归各自权利人所有。</p>
+        <p>字体使用系统自带中文字体，不内嵌任何商业字库。</p>
+      </article>
+      <article class="notice-card">
+        <span class="notice-no">NOTICE 05</span>
+        <h3>隐私与数据</h3>
+        <p>不设账号、不上传云端、不统计行为。姓名、头像与称号仅保存在本机，清除浏览器缓存即彻底消失。换设备不会同步。</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ================= 关于 ================= -->
+  <section class="screen screen-about" id="screen-about">
+    <div class="about-wrap">
+      <div class="about-visual">
+        <div class="about-mark"><svg viewBox="0 0 24 24"><use href="#i-eye"/></svg></div>
+        <h2>绝域志</h2>
+        <p>TERRA INCOGNITA</p>
+        <span>v0.9 · 108 COORDINATES</span>
+      </div>
+      <div class="about-body">
+        <div class="archive-head">
+          <p class="kicker">ABOUT THE DOSSIER</p>
+          <h2 class="sec-title">关于这本志</h2>
+        </div>
+        <div class="about-grid wide">
+          <div class="about-block"><h4>它是什么</h4><p>一本关于“如果”的档案：如果你只有几千块预算，背囊只装得下这些，而你要在一百零八处没有信号的地方之一，走进去几天。</p></div>
+          <div class="about-block"><h4>怎么玩</h4><p>选坐标 → 读简报 → 用固定预算采购 → 在“行军 / 侦察 / 扎营 / 翻找”之间分配体力与物资。每天结束结算饥饿、脱水与失温。</p></div>
+          <div class="about-block"><h4>难度与氛围</h4><p>一至二星是郊野与荒径，界面温和、节奏舒缓；四至五星会切到惊悚主题，画面更暗、更吵，事件里出现不该出现的东西。</p></div>
+          <div class="about-block"><h4>支线与彩蛋</h4><p>部分事件只在特定装备、特定节点出现。收集隐藏档案会逐步解锁昆仑死亡谷，也会进入异闻录。</p></div>
+          <div class="about-block"><h4>评级</h4><p>按推进度、身体状态、剩余物资、彩蛋与伤情综合评分。S 级意味着你几乎把这条线走成了教科书。</p></div>
+          <div class="about-block"><h4>制作</h4><p>纯静态单页：原生 JavaScript、内联 SVG 场景、程序化生成的中国地图轮廓。没有引擎、没有素材包、没有联网请求。</p></div>
+        </div>
+        <div class="about-warn">虚构演绎，请勿模仿。真实的无人区不接受试错。</div>
+        <p class="about-copy">© 2026 绝域志 · by xuranzhou · 保留所有权利 · 未经授权禁止商用</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-foot" id="site-foot">
+  <span>© 2026 绝域志 · by xuranzhou</span>
+  <span class="sf-sep"></span>
+  <span>虚构生存模拟</span>
+  <span class="sf-sep"></span>
+  <span>含死亡与惊悚描写 · 建议 16+</span>
+  <span class="sf-sep"></span>
+  <span>请勿模仿 · 真实无人区需依法审批</span>
+  <button class="sf-link" data-nav="notice">完整免责声明</button>
+</footer>
+
+<div id="toast-stack" class="toast-stack"></div>
+<div id="modal-root" class="modal-root" hidden></div>
+
+<script src="data/china-paths.js"></script>
+<script src="js/data.js"></script>
+<script src="js/locations-a.js"></script>
+<script src="js/locations-b.js"></script>
+<script src="js/events-a.js"></script>
+<script src="js/events-b.js"></script>
+<script src="js/events-c.js"></script>
+<script src="js/scenes.js"></script>
+<script src="js/map.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/app.js"></script>
+<script src="js/extra.js"></script>
+</body>
+</html>

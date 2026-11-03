@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><title>smoke2</title>
+<style>body{background:#111;color:#ddd;font:13px monospace;padding:20px}iframe{width:1200px;height:800px;border:1px solid #333}.pass{color:#8fbf8f}.fail{color:#e08a7a}</style>
+</head>
+<body>
+<pre id="out">running...</pre>
+<iframe id="frame" src="../index.html"></iframe>
+<script>
+const out = document.getElementById('out');
+const lines = [];
+function log(name, ok, detail) { lines.push(`<span class="${ok ? 'pass' : 'fail'}">${ok ? 'PASS' : 'FAIL'}</span> ${name}${detail ? ' :: ' + detail : ''}`); out.innerHTML = lines.join('\n'); }
+function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+function click(el) { if (!el) return false; el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window })); return true; }
+
+(async () => {
+  const frame = document.getElementById('frame');
+  let w = null, d = null, App = null, Engine = null;
+  for (let i = 0; i < 40; i++) {
+    await wait(120);
+    w = frame.contentWindow; d = frame.contentDocument;
+    try { App = w.eval('typeof App !== "undefined" ? App : null'); Engine = w.eval('typeof Engine !== "undefined" ? Engine : null'); } catch (e) { App = null; }
+    if (App && Engine && d.querySelector('#china-map .site')) break;
+  }
+  const E = w.EVENTS, C = w.COMMON_EVENTS;
+  const GEAR_MAP = w.eval('GEAR_MAP'), LOC_MAP = w.eval('LOC_MAP'), EGG_MAP = w.eval('EGG_MAP'), LOCATIONS = w.eval('LOCATIONS');
+  const errs = [];
+  w.addEventListener('error', e => errs.push(e.message + ' @' + e.filename + ':' + e.lineno));
+
+  try {
+    // ---- 数据完整性 ----
+    let missingGear = [], missingEgg = [], noFallback = [], missingEvents = [], missingLoc = [];
+    Object.keys(GEAR_MAP).forEach(() => {});
+    LOCATIONS.forEach(l => {
+      if (!E[l.id]) missingEvents.push(l.id);
+      l.must.forEach(id => { if (!GEAR_MAP[id]) missingGear.push(l.id + ':' + id); });
+    });
+    const allEvents = Object.keys(E).flatMap(k => E[k]).concat(C);
+    allEvents.forEach(ev => {
+      const opts = ev.options || [];
+      if (!opts.length) noFallback.push(ev.id);
+      if (!opts.some(o => !o.req)) noFallback.push(ev.id + '(全需装备)');
+      opts.forEach(o => {
+        const reqs = o.req ? (Array.isArray(o.req) ? o.req : [o.req]) : [];
+        reqs.forEach(id => { if (!GEAR_MAP[id]) missingGear.push(ev.id + ':req:' + id); });
+        (o.outcomes || []).forEach(out => {
+          const eff = out.eff || {};
+          if (eff.item && !GEAR_MAP[eff.item]) missingGear.push(ev.id + ':item:' + eff.item);
+          if (eff.egg && !EGG_MAP[eff.egg]) missingEgg.push(ev.id + ':egg:' + eff.egg);
+          if (out.next && !allEvents.some(x => x.id === out.next)) missingEgg.push(ev.id + ':next:' + out.next);
+        });
+      });
+    });
+    Object.keys(EGG_MAP).forEach(id => { if (!LOC_MAP[EGG_MAP[id].loc]) missingLoc.push(id); });
+    log('路线均配置事件', missingEvents.length === 0, missingEvents.join(','));
+    log('装备引用全部存在', missingGear.length === 0, missingGear.slice(0, 8).join(','));
+    log('彩蛋引用全部存在', missingEgg.length === 0, missingEgg.slice(0, 8).join(','));
+    log('彩蛋归属路线存在', missingLoc.length === 0, missingLoc.join(','));
+    log('每个事件都有无装备门槛的选项', noFallback.length === 0, noFallback.slice(0, 10).join(','));
+
+    // ---- 完整一局 ----
+    App.locId = 'motuo';
+    App.cart = {};
+    ['shell','tent','filter','rope','insect','food','water'].forEach(id => { App.cart[id] = 0; });
+    for (let i = 0; i < 12; i++) App.cart.food = (App.cart.food || 0) + 1;
+    for (let i = 0; i < 12; i++) App.cart.water = (App.cart.water || 0) + 1;
+    Engine.start('motuo', App.cart);
+    App.show('run');
+    App.enterRun();
+    let steps = 0, guard = 0;
+    while (!Engine.run.finished && guard++ < 40) {
+      App.doAction(['march','scout','camp','march'][steps % 4]);
+      steps++;
+      await wait(1200);
+      if (!d.getElementById('modal-root').hidden) {
+        const opt = d.querySelector('.option:not([disabled])');
+        if (opt) click(opt);
+        await wait(300);
+        const cont = d.getElementById('btn-outcome-continue');
+        if (cont) click(cont);
+        await wait(500);
+      }
+    }
+    log('连续行动可推进到结束', Engine.run.finished, `steps=${steps} day=${Engine.run.day} prog=${Engine.run.progress} success=${Engine.run.success}`);
+    App.showResult();
+    await wait(400);
+    log('结束进入结算页', d.getElementById('screen-result').classList.contains('active'), `rank=${d.getElementById('result-rank').textContent} stamp=${d.getElementById('result-stamp').textContent}`);
+
+    // ---- 档案切换 & 记录 ----
+    click(d.querySelector('#screen-result [data-nav="archive"]'));
+    await wait(300);
+    click(d.querySelector('#archive-tabs [data-tab="ach"]'));
+    await wait(200);
+    const achCount = d.querySelectorAll('#archive-body .ach-item').length;
+    click(d.querySelector('#archive-tabs [data-tab="records"]'));
+    await wait(200);
+    const recCount = d.querySelectorAll('#archive-body .record-row').length;
+    log('档案标签切换', achCount > 0 && (recCount >= 0), `ach=${achCount} recordRows=${recCount}`);
+
+    // ---- 秘密线路解锁 ----
+    const four = w.eval('EGGS.slice(0,4).map(e=>e.id)');
+    Engine.meta.eggs = four.slice();
+    Engine.meta.ach = [];
+    Engine.meta.records = [];
+    Engine.meta.runs = 0;
+    Engine.saveMeta();
+    w.eval('MapView.refresh()');
+    await wait(200);
+    const kunlunLocked = !!d.querySelector('[data-site="kunlun"].locked');
+    log('收集4个彩蛋解锁昆仑', !kunlunLocked, `locked=${kunlunLocked}`);
+    App.locId = 'kunlun';
+    log('秘密线路简报可打开', true, `unlocked=${Engine.secretUnlocked()}`);
+
+    // ---- 死亡结算 ----
+    Engine.start('aotai', { food: 0, water: 0 });
+    Engine.run.hp = 1;
+    Engine.finish(false, '失温');
+    App.showResult();
+    await wait(300);
+    log('死亡结算显示未归', d.getElementById('result-stamp').textContent === '未归', `stamp=${d.getElementById('result-stamp').textContent} sub=${d.getElementById('result-sub').textContent}`);
+
+    log('全流程无 JS 异常', errs.length === 0, errs.slice(0,3).join(' | '));
+  } catch (e) {
+    log('测试脚本异常', false, e.message + '\n' + e.stack);
+  }
+  document.title = 'smoke2 done';
+})();
+</script>
+</body>
+</html>

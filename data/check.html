@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>check</title></head>
+<body>
+<pre id="out">loading</pre>
+<script>
+window.__errors = [];
+window.onerror = function (m, s, l, c, e) { window.__errors.push(m + ' @' + s + ':' + l); };
+</script>
+<script src="../data/china-paths.js"></script>
+<script src="../js/data.js"></script>
+<script src="../js/locations-a.js"></script>
+<script src="../js/locations-b.js"></script>
+<script src="../js/events-a.js"></script>
+<script src="../js/events-b.js"></script>
+<script src="../js/events-c.js"></script>
+<script src="../js/scenes.js"></script>
+<script src="../js/map.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+(function () {
+  const out = [];
+  const err = [];
+  const ids = {};
+  const scenes = ['ridge','plateau','desert','forest','gorge','caldera','glacier','karst'];
+  const reqOk = (id) => !!GEAR_MAP[id];
+  const reqList = (r) => Array.isArray(r) ? r : String(r).split(',');
+  let evTotal = 0;
+  const levelCount = {1:0,2:0,3:0,4:0,5:0};
+
+  LOCATIONS.forEach(l => {
+    if (ids[l.id]) err.push('重复 id: ' + l.id);
+    ids[l.id] = 1;
+    ['name','en','province','brief','season','stamp'].forEach(k => {
+      if (!l[k]) err.push(l.id + ' 缺少字段 ' + k);
+    });
+    if (typeof l.lon !== 'number' || typeof l.lat !== 'number') err.push(l.id + ' 坐标错误');
+    if (!scenes.includes(l.scene)) err.push(l.id + ' 未知地貌 ' + l.scene);
+    if (l.level < 1 || l.level > 5) err.push(l.id + ' 难度越界');
+    levelCount[l.level] = (levelCount[l.level] || 0) + 1;
+    if (!l.route || l.route.length < 4) err.push(l.id + ' 路线节点不足');
+    (l.must || []).forEach(g => { if (!reqOk(g)) err.push(l.id + ' must 装备不存在: ' + g); });
+
+    const evs = EVENTS[l.id];
+    if (!evs || !evs.length) err.push(l.id + ' 没有事件组');
+    else {
+      evTotal += evs.length;
+      const evIds = {};
+      evs.forEach(e => {
+        if (evIds[e.id]) err.push(l.id + ' 事件 id 重复 ' + e.id);
+        evIds[e.id] = 1;
+        if (!e.options || !e.options.length) err.push(l.id + ' 事件无选项 ' + e.id);
+        let free = false;
+        (e.options || []).forEach(o => {
+          if (!o.req) free = true;
+          else reqList(o.req).forEach(rid => { if (!reqOk(rid)) err.push(l.id + ' 选项 req 不存在 ' + rid + ' @' + e.id); });
+          if (!o.outcomes || !o.outcomes.length) err.push(l.id + ' 选项无结果 ' + e.id);
+          (o.outcomes || []).forEach(oc => {
+            if (oc.next && !EVENTS[l.id].some(x => x.id === oc.next)) err.push(l.id + ' next 目标不存在 ' + oc.next);
+            if (oc.eff && oc.eff.item && !reqOk(oc.eff.item)) err.push(l.id + ' 奖励装备不存在 ' + oc.eff.item);
+            if (oc.eff) Object.keys(oc.eff).forEach(k => {
+              if (!['hp','stamina','warmth','morale','food','water','fuel','progress','injury','egg','item','flag','heat'].includes(k)) {
+                err.push(l.id + ' 未知效果 ' + k + ' @' + e.id);
+              }
+            });
+          });
+        });
+        if (!free) err.push(l.id + ' 事件无免门槛选项 ' + e.id);
+      });
+    }
+  });
+
+  (EGGS || []).forEach(eg => { if (!ids[eg.loc]) err.push('彩蛋地点不存在 ' + eg.loc); });
+  (EGGS || []).forEach(eg => {
+    const found = (EVENTS[eg.loc] || []).some(e => e.options.some(o => o.outcomes.some(oc => oc.eff && oc.eff.egg === eg.id)));
+    if (!found) err.push('彩蛋未挂事件 ' + eg.id + ' @' + eg.loc);
+  });
+
+  out.push('LOCATIONS=' + LOCATIONS.length);
+  out.push('EVENTS_TOTAL=' + evTotal);
+  out.push('EVENTS_BUILT=' + (window.EVENTS_BUILT || 0));
+  out.push('EGGS=' + (EGGS || []).length);
+  out.push('LEVELS=' + JSON.stringify(levelCount));
+  out.push('ERRORS=' + err.length);
+  err.slice(0, 60).forEach(e => out.push('  ! ' + e));
+  if (window.__errors.length) out.push('JS_ERRORS=' + JSON.stringify(window.__errors));
+  document.getElementById('out').textContent = out.join('\n');
+})();
+</script>
+</body></html>

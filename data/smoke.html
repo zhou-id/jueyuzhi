@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><title>smoke</title>
+<style>body{background:#111;color:#ddd;font:13px monospace;padding:20px}iframe{width:1200px;height:800px;border:1px solid #333;display:block;margin-top:12px}.pass{color:#8fbf8f}.fail{color:#e08a7a}</style>
+</head>
+<body>
+<pre id="out">running...</pre>
+<iframe id="frame" src="../index.html"></iframe>
+<script>
+const out = document.getElementById('out');
+const lines = [];
+function log(name, ok, detail) {
+  lines.push(`<span class="${ok ? 'pass' : 'fail'}">${ok ? 'PASS' : 'FAIL'}</span> ${name}${detail ? ' :: ' + detail : ''}`);
+  out.innerHTML = lines.join('\n');
+}
+function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+function click(el) { if (!el) return false; el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window })); return true; }
+
+(async () => {
+  const frame = document.getElementById('frame');
+  let w = null, d = null, App = null, Engine = null, EVENTS = null, EGG_COUNT = 0;
+  for (let i = 0; i < 40; i++) {
+    await wait(120);
+    w = frame.contentWindow; d = frame.contentDocument;
+    try {
+      App = w.eval('typeof App !== "undefined" ? App : null');
+      Engine = w.eval('typeof Engine !== "undefined" ? Engine : null');
+    } catch (e) { App = null; }
+    if (App && Engine && d.querySelector('#china-map .site')) break;
+  }
+  EVENTS = w.EVENTS; EGG_COUNT = w.eval('EGGS.length');
+  const errs = [];
+  w.addEventListener('error', e => errs.push(e.message + ' @' + e.filename + ':' + e.lineno));
+
+  try {
+    log('App & Engine 已加载', !!App && !!Engine && !!w.eval('MapView'), `screens=${d.querySelectorAll('.screen').length}`);
+    log('地图 SVG 渲染', d.querySelectorAll('#china-map .site').length === 12, `markers=${d.querySelectorAll('#china-map .site').length}`);
+
+    click(d.querySelector('#screen-title [data-nav="map"]'));
+    await wait(300);
+    log('进入地图页', d.getElementById('screen-map').classList.contains('active'), App.screen);
+
+    click(d.querySelector('[data-site="aotai"]'));
+    await wait(300);
+    const detail = d.getElementById('route-detail');
+    log('点击鳌太线显示详情', !detail.hidden && detail.textContent.indexOf('鳌太线') >= 0);
+
+    click(d.querySelector('#route-detail [data-brief]'));
+    await wait(400);
+    log('进入简报页', d.getElementById('screen-brief').classList.contains('active'), `loc=${App.locId} scene=${d.querySelectorAll('#brief-scene svg').length}`);
+
+    click(d.getElementById('btn-goto-market'));
+    await wait(400);
+    log('进入采购页', d.getElementById('screen-market').classList.contains('active'), `screen=${App.screen} cards=${d.querySelectorAll('#gear-grid .gear-card').length}`);
+
+    ['shell','down','bag','tent'].forEach(id => click(d.querySelector(`[data-buy="${id}"][data-dir="plus"]`)));
+    for (let i = 0; i < 8; i++) {
+      click(d.querySelector('[data-buy="water"][data-dir="plus"]'));
+      click(d.querySelector('[data-buy="food"][data-dir="plus"]'));
+    }
+    await wait(300);
+    log('采购后预算/重量更新', d.getElementById('g-budget').textContent !== '¥0', `budget=${d.getElementById('g-budget').textContent} weight=${d.getElementById('g-weight').textContent} food=${d.getElementById('g-food').textContent}`);
+
+    click(d.getElementById('btn-depart'));
+    await wait(500);
+    log('进入远征页', d.getElementById('screen-run').classList.contains('active'), `hp=${d.getElementById('m-hp').textContent} day=${d.getElementById('run-day').textContent}`);
+
+    click(d.querySelector('[data-action="march"]'));
+    await wait(1200);
+    const modalOpen = !d.getElementById('modal-root').hidden;
+    log('行军后出现事件或日切', modalOpen || !!d.querySelector('.day-transition'), `modal=${modalOpen} options=${d.querySelectorAll('.option').length}`);
+
+    if (modalOpen) {
+      const opt = d.querySelector('.option:not([disabled])');
+      const optText = opt ? opt.textContent.trim().replace(/\s+/g,' ').slice(0, 30) : 'none';
+      click(opt);
+      await wait(400);
+      const cont = d.getElementById('btn-outcome-continue');
+      log('事件选项产生结果', !!cont, `option=${optText}`);
+      click(cont);
+      await wait(1300);
+      log('继续后关闭弹窗', d.getElementById('modal-root').hidden, `day=${d.getElementById('run-day').textContent}`);
+    }
+
+    // 直接测试一个本地事件与结果页
+    App.openEvent((EVENTS.aotai || [])[0]);
+    await wait(300);
+    log('手动打开事件弹窗', !d.getElementById('modal-root').hidden && d.querySelectorAll('.option').length > 0);
+    if (!d.getElementById('modal-root').hidden) App.closeModal();
+
+    Engine.finish(true, '测试抵达');
+    App.showResult();
+    await wait(400);
+    log('结算页渲染', d.getElementById('screen-result').classList.contains('active') && d.getElementById('result-rank').textContent.length > 0, `rank=${d.getElementById('result-rank').textContent} score=${d.getElementById('result-score').textContent}`);
+
+    click(d.querySelector('#screen-result [data-nav="archive"]'));
+    await wait(400);
+    log('档案库渲染', d.getElementById('screen-archive').classList.contains('active') && d.querySelectorAll('#archive-body .egg-item').length === EGG_COUNT, `eggs=${d.querySelectorAll('#archive-body .egg-item').length}/${EGG_COUNT}`);
+
+    log('运行期无 JS 异常', errs.length === 0, errs.join(' | '));
+  } catch (e) {
+    log('测试脚本异常', false, e.message + '\n' + e.stack);
+  }
+  document.title = 'smoke done';
+})();
+</script>
+</body>
+</html>
